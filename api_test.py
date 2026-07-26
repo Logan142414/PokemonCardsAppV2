@@ -1,0 +1,1 @@
+#test out the api to get daily card prices
