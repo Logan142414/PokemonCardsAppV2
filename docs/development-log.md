@@ -46,3 +46,33 @@
 - Filled tables: 174 sets, 20,444 cards
 - Confirmed data quality - no nulls or empty strings across all columns, no duplicate card_ids
 - Added `rarity` column to cards table — will use this to filter which cards get daily price scraping. Plan to exclude Common, Uncommon, NULL, and Rare (~12,550 cards), leaving ~7,400 cards worth tracking (as of July 2026)
+
+
+## July 26, 2026
+
+- Starting to compare different api options as  https://www.pokemonpricetracker.com/ doesn't give graded card prices
+    - ttps://www.pokemonpricetracker.com/ ($9.99 a month for ungraded prices, sealed product prices. $100 to get graded numbers)
+    - https://www.pricecharting.com/ ($49.99 a month to get ungraded prices, sealed product prices, and graded numbers)
+    - https://tcgapi.dev/ ($9.99 a month to get... $20/mo and $50/mo plans as well...)
+    - https://justtcg.com/ ($20 a month... or even more expensive plans)
+    - https://silphcoanalytics.xyz/docs/api/getting-started?
+
+## Aug 1, 2026
+
+- Switched fully to pokemonpricetracker.com as the single data source for all card metadata and pricing
+- Removed data populated from the GitHub JSON repo — maintaining two sources with mismatched IDs added unnecessary complexity
+- Spent time exploring the API: tested set, card, and pricing endpoints to understand response structure, available fields, and rate limits
+- Discovered the API has two rate limits: 20,000 credits/day and 150 requests per 5 minutes (undocumented)
+- Took an ELT approach for initial data exploration - loaded raw data into Supabase first, then explored with SQL to understand what needed cleaning
+- Hit API rate limit during initial full cards load — added `time.sleep(2.5)` and retry logic with exponential backoff
+- Sets table findings: 3 sets had card_count = 0, some sets missing release dates, several "Other" era sets needed era corrections, some sets (McDonald's promos, Trick or Trade, Battle Academy) produce no trackable cards
+- Restructured project into `pipeline/` and `utils/` folders for clean separation of concerns
+
+## Aug 2, 2026
+
+- Re-filled sets table using new pipeline script (`api_fill_sets_FINAL.py`) with cleaned logic
+- Added `tcg_numeric_id` column to sets table — required for the /cards endpoint which expects numeric GroupId, not the slug
+- Confirmed that `name` from /sets endpoint always matches `setName` from /cards endpoint across all 214 sets (0 mismatches) — validates the FK lookup approach
+- Added `minPrice=0.99` filter to cards API calls to reduce credit usage by ~50%
+- Built `utils/transformations.py` with `clean_card_name()` to handle cards where API appends card number to name (e.g. "Pikachu - 037/128" → "Pikachu")
+- Updated README to reflect current architecture and previous version history

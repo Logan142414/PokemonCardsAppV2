@@ -26,36 +26,24 @@ The application consists of four main components:
 
 ### 1. Data Collection
 
-- Retrieves Pokémon card information and pricing data through external API.
-- Focuses on English Pokémon cards across all available sets.
-- Collects daily market snapshots.
+- **API:** pokemonpricetracker.com (English cards, TCGPlayer market prices)
+- Replaces previous web scraping approach
 
 ### 2. ETL Pipeline
 
-- Cleans and transforms raw API responses.
-- Standardizes card information and pricing fields.
-- Handles missing values and maintains consistent data quality.
-- Prepares data for database storage.
+- `pipeline/api_fill_sets_FINAL.py` — one-time set data load
+- `pipeline/api_fill_cards_FINAL.py` — initial card + price history load  
+- `pipeline/api_daily_run_FINAL.py` — daily price updates
 
 ### 3. Database Storage
 
 Data is stored using **Supabase PostgreSQL**.
 
-The database maintains:
-
-**Card Information**
-- Card name
-- Set
-- Card number
-- Rarity
-- Release information
-- Other card metadata
-
-**Price History**
-- Card identifier
-- Date of price snapshot
-- Market price
-- Historical price changes (last 7d, 14d, etc)
+Four tables:
+- `sets` — set metadata
+- `cards` — card metadata
+- `price_history` — daily price snapshots
+- (planned) `sealed_products` + `sealed_price_history`
 
 ### 4. Analytics Dashboard
 
@@ -83,7 +71,6 @@ The dashboard will explore questions such as:
 ## Data Engineering
 
 - API Integration
-- Pandas
 - Data Cleaning Pipelines
 - Automated Data Collection
 
@@ -101,10 +88,11 @@ The dashboard will explore questions such as:
 
 # Previous Version
 
--The original version of this project used web scraping from PriceCharting.com to collect data, which had a few issues.
--For storage I used GCS (Google Cloud Storage) - also wanted to move on from this.
+**v1** — Web scraping from PriceCharting.com + Google Cloud Storage. Replaced due to scraping reliability issues and lack of historical price data.
 
-The project has since been redesigned around API-based data collection and Supabase to improve reliability, scalability, and automation.
+**v2** — GitHub JSON repo (pokemon-tcg-data) for card/set metadata + pokemonpricetracker.com API for prices. Replaced because maintaining two data sources with mismatched IDs added unnecessary complexity.
+
+**Current** — Single API source (pokemonpricetracker.com) for both metadata and pricing, stored in Supabase PostgreSQL.
 
 ---
 
