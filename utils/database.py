@@ -46,7 +46,7 @@ def get_set_ids_to_search():
     print(f"Retrevied {len(set_num)} set ids")
     return set_num
 
-#make a dict to contain set slug and set name that will be 
+#make a dict to contain set slug and set name
 def get_set_name_to_id_pair():
     db = get_connection()
     cursor = db.cursor()
@@ -56,6 +56,20 @@ def get_set_name_to_id_pair():
     db.close()
     return {row[0]: row[1] for row in rows}
 
+
+def get_product_ids_to_search():
+    db = get_connection()
+    cursor = db.cursor()
+
+    cursor.execute(
+        "SELECT product_id FROM sealed_product")
+
+    result = cursor.fetchall()
+    product_num = [i[0] for i in result]
+    cursor.close()
+    db.close()
+    print(f"Retrevied {len(product_num)} product_ids")
+    return product_num
 
 
 #insert data into cards table
@@ -104,7 +118,7 @@ def insert_into_price_history_table(cards_from_each_set):
 
 
 
-def insert_sets(sets_to_insert):
+def insert_into_sets_table(sets_to_insert):
     db = get_connection()
     cursor = db.cursor()
 
@@ -126,6 +140,129 @@ def insert_sets(sets_to_insert):
     cursor.close()
     db.close()
     print(f"Inserted {len(sets_to_insert)} sets")
+
+
+
+def insert_into_sealed_product_table(products_to_insert, set_name_to_id):
+    db = get_connection()
+    cursor = db.cursor()
+    inserted = 0
+
+    for s in products_to_insert:
+        cursor.execute("""
+                INSERT INTO sealed_products (product_id, product_name, set_id, image_url)
+                VALUES (%s, %s, %s, %s)
+                ON CONFLICT (product_id) DO NOTHING
+            """, (
+                s["tcgPlayerId"],
+                s.get("name"),
+                set_name_to_id.get(s.get("setName")), 
+                s.get("imageCdnUrl400")
+            ))
+        inserted += cursor.rowcount
+
+    db.commit()
+    cursor.close()
+    db.close()
+    print(f"  {inserted} new products inserted, {len(products_to_insert) - inserted} already existed")
+
+
+
+def insert_into_price_history_table_sealed(products_to_insert):
+    db = get_connection()
+    cursor = db.cursor()
+    snapshot_date = datetime.now(timezone.utc).date()
+
+    for s in products_to_insert:
+        cursor.execute("""
+                INSERT INTO sealed_price_history (product_id, snapshot_date, market_price, price_updated_on)
+                VALUES (%s, %s, %s, %s)
+                ON CONFLICT (product_id, snapshot_date) DO NOTHING
+                """, (
+                s.get("tcgPlayerId"),
+                snapshot_date,
+                s.get("unopenedPrice"),
+                s.get("updatedAt")
+                ))
+
+    db.commit()
+    cursor.close()
+    db.close()
+
+
+
+def insert_price_history_past_180days(cards_from_each_set):
+    db = get_connection()
+    cursor = db.cursor()
+    fk_violations = []
+
+    for x in cards_from_each_set:
+        card_id = x["tcgPlayerId"]
+        history = x["priceHistory"]["conditions"]["Near Mint"]["history"]
+        for i in history:
+            # print(card_id, i["date"], i["market"], i['date'])
+            
+            try:
+                cursor.execute("""
+                        INSERT INTO price_history (card_id, snapshot_date, market_price, price_updated_on)
+                        VALUES (%s, %s, %s, %s)
+                        ON CONFLICT (card_id, snapshot_date) DO NOTHING
+                    """, (
+                        card_id,
+                        i["date"],
+                        i["market"], 
+                        i['date']
+                    ))
+            
+            except Exception as e:
+                    db.rollback()
+                    fk_violations.append({"card_id": card_id, "name": x.get("name")})
+                    break  # stop trying other dates for this card
+            
+    db.commit()
+    cursor.close()
+    db.close()
+    
+    if fk_violations:
+        print(f"  FK violations (card not in cards table): {len(fk_violations)}")
+        for v in fk_violations:
+            print(f"    - {v['name']} ({v['card_id']})")
+
+
+
+def insert_price_history_past_180days_sealed(products_from_each_set):
+    db = get_connection()
+    cursor = db.cursor()
+    fk_violations = []
+    
+    for product in products_from_each_set:
+        product_id = product.get("tcgPlayerId")
+        history = product.get("priceHistory", [])
+        
+        for i in history:
+            try:
+                cursor.execute("""
+                        INSERT INTO sealed_price_history (product_id, snapshot_date, market_price, price_updated_on)
+                        VALUES (%s, %s, %s, %s)
+                        ON CONFLICT (product_id, snapshot_date) DO NOTHING
+                    """, (
+                        product_id,
+                        i["date"],
+                        i["unopenedPrice"],
+                        i['date']
+                    ))
+            except Exception as e:
+                    db.rollback()
+                    fk_violations.append({"product_id": product_id, "name": product.get("name")})
+                    break  
+    db.commit()
+    cursor.close()
+    db.close()
+    
+    if fk_violations:
+        print(f"  FK violations ( product not available in product table): {len(fk_violations)}")
+        for v in fk_violations:
+            print(f"    - {v['name']} ({v['product_id']})")
 
 
 

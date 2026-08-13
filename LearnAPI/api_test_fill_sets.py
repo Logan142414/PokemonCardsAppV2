@@ -33,7 +33,7 @@ def fetch_all_sets():
         
 
         headers = {"Authorization": f"Bearer {PokemonK}"}
-        url = f'{PokemonK_URL}/api/v2/sets'
+        url = f'{PokemonK_URL}/sets'
         response = requests.get(url, headers=headers, params=params)
         data = response.json()
 

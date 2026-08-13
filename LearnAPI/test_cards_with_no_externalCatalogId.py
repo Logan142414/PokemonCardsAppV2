@@ -16,7 +16,7 @@ test_cards = [
 
 for card in test_cards:
     params = {"language": "english", "search": card["search"], "set": card["set"]}
-    response = requests.get(f"{PokemonK_URL}/api/v2/cards", headers=headers, params=params)
+    response = requests.get(f"{PokemonK_URL}/cards", headers=headers, params=params)
     data = response.json()
     cards = data.get("data", [])
     if cards:

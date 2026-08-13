@@ -24,7 +24,7 @@ for s in test_sets:
         "sortBy": "price",
         "sortOrder": "desc",
     }
-    response = requests.get(f"{PokemonK_URL}/api/v2/cards", headers=headers, params=params)
+    response = requests.get(f"{PokemonK_URL}/cards", headers=headers, params=params)
     data = response.json()
     cards = data.get("data", [])
     print(f"\n=== {s['name']} ===")

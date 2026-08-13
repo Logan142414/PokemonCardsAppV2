@@ -1,6 +1,7 @@
-from utils.api import fetch_sets
+from utils.api import PokemonTrackerAPI
 from utils.transformations import filter_sets
-from utils.database import insert_sets
+from utils.database import insert_into_sets_table
+api = PokemonTrackerAPI()
 
 # CREATING SET TABLE IN DB
 # only looking at english cards, set limit to 500 since default is 100.
@@ -11,8 +12,11 @@ from utils.database import insert_sets
 # A handful of sets did not have release date - manually added these
 # A handful of sets did not have correct era listed either - manually add some of these
 
+#api call to /sets endpoint. get each sets data (1 call)
+sets_data = api.api_get_sets_data()
 
+#removing the sets with no cards in them? (unreleased or error)
+set_data_to_insert, set_num = filter_sets(sets_data)
 
-data = fetch_sets()
-sets_to_insert, set_num = filter_sets(data)
-insert_sets(sets_to_insert)
+#inserting to db, just the remaining data after removing unreleased or error sets
+insert_into_sets_table(set_data_to_insert)

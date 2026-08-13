@@ -76,3 +76,15 @@
 - Added `minPrice=0.99` filter to cards API calls to reduce credit usage by ~50%
 - Built `utils/transformations.py` with `clean_card_name()` to handle cards where API appends card number to name (e.g. "Pikachu - 037/128" → "Pikachu")
 - Updated README to reflect current architecture and previous version history
+
+
+## Aug 6-7, 2026
+
+- Added sealed_products and sealed_price_history tables to Supabase
+- Built pipeline scripts to populate both tables — fetches all sealed products and daily prices from /sealed-products endpoint
+- Added filter_sealed_products() to transformations.py — filters out products with no product_id or set match
+- Started backfill of 180 days of card price history across all 214 sets
+    - Uses completed_sets.txt to resume across multiple days without re-spending credits
+    - ~39 of 214 sets completed so far
+- Identified card name cleaning gaps beyond current clean_card_name() logic — will audit with SQL and update
+- Created LESSONS.md to track software engineering and data concepts learned throughout the project
