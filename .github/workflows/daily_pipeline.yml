@@ -1,0 +1,43 @@
+name: Daily Pokemon Pipeline
+
+on:
+  schedule:
+    - cron: '0 8 * * *'  # runs every day at 8am UTC
+  workflow_dispatch:  # allows you to trigger it manually from GitHub
+
+jobs:
+  run-pipeline:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.12'
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Run sets pipeline
+        run: python -m pipeline.api_fill_sets_daily
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          Pokemon_K: ${{ secrets.Pokemon_K }}
+          Pokemon_K_URL: ${{ secrets.Pokemon_K_URL }}
+
+      - name: Run cards pipeline
+        run: python -m pipeline.api_fill_cards_daily
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          Pokemon_K: ${{ secrets.Pokemon_K }}
+          Pokemon_K_URL: ${{ secrets.Pokemon_K_URL }}
+
+      - name: Run sealed pipeline
+        run: python -m pipeline.api_fill_sealed_daily
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          Pokemon_K: ${{ secrets.Pokemon_K }}
+          Pokemon_K_URL: ${{ secrets.Pokemon_K_URL }}
