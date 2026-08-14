@@ -2,25 +2,31 @@ name: Daily Pokemon Pipeline
 
 on:
   schedule:
-    - cron: '0 8 * * *'  # runs every day at 8am UTC
+    - cron: '0 0 * * *'  # midnight UTC = 4pm PST
   workflow_dispatch:  # allows you to trigger it manually from GitHub
 
+# spins up a fresh Linux machine in the cloud each time
 jobs:
   run-pipeline:
     runs-on: ubuntu-latest
 
+# runs in order - one after another
     steps:
+        #downloads code onto linux machine
       - name: Checkout repo
         uses: actions/checkout@v3
 
+        #installs Python 3.12
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
           python-version: '3.12'
 
+        #runs pip install -r requirements.txt
       - name: Install dependencies
         run: pip install -r requirements.txt
 
+        #runs your sets script first
       - name: Run sets pipeline
         run: python -m pipeline.api_fill_sets_daily
         env:
@@ -28,6 +34,7 @@ jobs:
           Pokemon_K: ${{ secrets.Pokemon_K }}
           Pokemon_K_URL: ${{ secrets.Pokemon_K_URL }}
 
+          #runs cards + price history script
       - name: Run cards pipeline
         run: python -m pipeline.api_fill_cards_daily
         env:
@@ -35,6 +42,7 @@ jobs:
           Pokemon_K: ${{ secrets.Pokemon_K }}
           Pokemon_K_URL: ${{ secrets.Pokemon_K_URL }}
 
+          #runs sealed products + sealed price history
       - name: Run sealed pipeline
         run: python -m pipeline.api_fill_sealed_daily
         env:

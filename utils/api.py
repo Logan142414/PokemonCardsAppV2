@@ -123,7 +123,7 @@ class PokemonTrackerAPI:
             params = {
             "language": "english",
             "includeHistory": "true",
-            "days": 180,
+            "days": 5,
             "setId": set_num, 
             "minPrice": 0.90}
             
