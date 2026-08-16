@@ -5,5 +5,4 @@ requests
 plotly
 psycopg2-binary
 python-dotenv
-json
 
