@@ -56,6 +56,16 @@ def get_set_name_to_id_pair():
     db.close()
     return {row[0]: row[1] for row in rows}
 
+def get_set_id_to_set_name_pair():
+    db = get_connection()
+    cursor = db.cursor()
+    cursor.execute("SELECT tcg_numeric_id, set_name FROM sets")
+    rows = cursor.fetchall()
+    cursor.close()
+    db.close()
+    return {row[0]: row[1] for row in rows}
+
+
 
 def get_product_ids_to_search():
     db = get_connection()
@@ -278,58 +288,80 @@ def insert_price_history_past_180days_sealed(products_from_each_set):
 
 #####################################################################
 
-def save_skipped_cards_to_table():
+def save_skipped_cards_to_table(skipped):
     conn = get_connection()
     cursor = conn.cursor()
+    snapshot_date = datetime.now(timezone.utc).date()
 
-    cursor.execute("""CREATE TABLE  zero_products_added_sets( 
-                   date date,
-                   set_id text
-                   )""")
+    for row in skipped:
+        cursor.execute("""INSERT INTO skipped_cards (date, reason, card_name, set_name, market_price, card_id)
+                       VALUES (%s, %s, %s, %s, %s, %s)""",
+                       (snapshot_date,
+                        row.get("reason"),
+                        row.get("name"),
+                        row.get("setName"),
+                        row.get("market_price"),
+                        row.get("card_id")))
 
     conn.commit()
-    conn.close()
     cursor.close()
+    conn.close()
+    print(f"Saved {len(skipped)} skipped cards to DB")
 
-def save_zero_card_sets_to_table():
+
+def save_zero_card_sets_to_table(zero_card_sets):
     conn = get_connection()
     cursor = conn.cursor()
+    snapshot_date = datetime.now(timezone.utc).date()
+    tcg_id_to_name = get_set_id_to_set_name_pair()
 
-    cursor.execute("""CREATE TABLE  zero_products_added_sets( 
-                   date date,
-                   set_id text
-                   )""")
+    for set_id in zero_card_sets:
+        cursor.execute("""INSERT INTO zero_cards_added_sets (date, set_id, set_name)
+                       VALUES (%s, %s, %s)""",
+                       (snapshot_date, set_id, tcg_id_to_name.get(set_id)))
 
     conn.commit()
-    conn.close()
     cursor.close()
+    conn.close()
+    print(f"Saved {len(zero_card_sets)} zero-card sets to DB")
 
-def save_zero_product_sets_to_table():
+
+def save_zero_product_sets_to_table(zero_product_sets):
     conn = get_connection()
     cursor = conn.cursor()
+    snapshot_date = datetime.now(timezone.utc).date()
+    tcg_id_to_name = get_set_id_to_set_name_pair()
 
-    cursor.execute("""CREATE TABLE  zero_products_added_sets( 
-                   date date,
-                   set_id text
-                   )""")
+    for set_id in zero_product_sets:
+        cursor.execute("""INSERT INTO zero_products_added_sets (date, set_id, set_name)
+                       VALUES (%s, %s, %s)""",
+                       (snapshot_date, set_id, tcg_id_to_name.get(set_id)))
 
     conn.commit()
-    conn.close()
     cursor.close()
+    conn.close()
+    print(f"Saved {len(zero_product_sets)} zero-product sets to DB")
 
-def save_skipped_sealed_to_table():
+
+def save_skipped_sealed_to_table(skipped):
     conn = get_connection()
     cursor = conn.cursor()
+    snapshot_date = datetime.now(timezone.utc).date()
 
-    cursor.execute("""CREATE TABLE  zero_products_added_sets( 
-                   date date,
-                   set_id text
-                   )""")
+    for row in skipped:
+        cursor.execute("""INSERT INTO skipped_products (date, reason, product_name, set_name, sealed_price, product_id)
+                       VALUES (%s, %s, %s, %s, %s, %s)""",
+                       (snapshot_date,
+                        row.get("reason"),
+                        row.get("name"),
+                        row.get("setName"),
+                        row.get("price"),
+                        row.get("product_id")))
 
     conn.commit()
-    conn.close()
     cursor.close()
-
+    conn.close()
+    print(f"Saved {len(skipped)} skipped products to DB")
 
 
 #####################################################################

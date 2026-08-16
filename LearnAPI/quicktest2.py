@@ -2,7 +2,7 @@ import requests
 from dotenv import load_dotenv
 from utils.database import get_set_ids_to_search, get_connection
 import os
-from utils.quicktest import PokemonTrackerAPI
+from LearnAPI.quicktest import PokemonTrackerAPI
 import psycopg2
 from datetime import datetime, timezone
 
