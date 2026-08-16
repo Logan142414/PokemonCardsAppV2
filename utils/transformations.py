@@ -1,9 +1,68 @@
+import re
 
-def clean_card_name(name):
-    if name and " - " in name:
-        parts = name.split(" - ")
-        if "/" in parts[-1]:
-            return parts[0].strip()
+# def clean_card_name(name):
+#     if name and " - " in name:
+#         parts = name.split(" - ")
+#         if "/" in parts[-1]:
+#             return parts[0].strip()
+#     return name
+
+# def clean_card_name(name, card_number):
+#     if not name or not card_number or ' - ' not in name:
+#         return name
+    
+#     base_num = card_number.split('/')[0].lstrip('0') or '0'
+    
+#     parts = name.split(' - ', 1)
+#     after_dash = parts[1].strip()
+#     after_first_token = after_dash.split(' ')[0].split('(')[0].split('[')[0].rstrip(',').strip()
+#     after_first_lstripped = after_first_token.lstrip('0') or '0'
+    
+#     if (after_first_token == card_number or 
+#         after_first_lstripped == base_num or
+#         after_first_token == card_number.split('/')[0]):
+#         remainder = after_dash[len(after_first_token):].strip()
+#         return (parts[0].strip() + ' ' + remainder).strip() if remainder else parts[0].strip()
+    
+#     return name
+
+def clean_card_name(name, card_number):
+    if not name or not card_number:
+        return name
+    
+    base_num = card_number.split('/')[0].lstrip('0') or '0'
+    
+    # Pattern 1: "Name - CODE remainder" → strip the code if it matches card number
+    if ' - ' in name:
+        parts = name.split(' - ', 1)
+        after_dash = parts[1].strip()
+        after_first_token = after_dash.split(' ')[0].split('(')[0].split('[')[0].rstrip(',').strip()
+        after_first_lstripped = after_first_token.lstrip('0') or '0'
+        
+        if (after_first_token == card_number or 
+            after_first_lstripped == base_num or
+            after_first_token == card_number.split('/')[0]):
+            remainder = after_dash[len(after_first_token):].strip()
+            name = (parts[0].strip() + ' ' + remainder).strip() if remainder else parts[0].strip()
+    
+    # Pattern 2: "Name (NUMBER)" where NUMBER matches card number → strip the parens entirely
+    paren_match = re.search(r'\s*\((\d+)\)\s*$', name)
+    if paren_match:
+        num_in_paren = paren_match.group(1).lstrip('0') or '0'
+        if num_in_paren == base_num:
+            name = name[:paren_match.start()].strip()
+    
+    # Pattern 3: "Name (NUMBER Text)" → strip just the number, keep the text
+    paren_match2 = re.search(r'\((\d+)\s+([^)]+)\)', name)
+    if paren_match2:
+        num = paren_match2.group(1).lstrip('0') or '0'
+        if num == base_num:
+            remainder = paren_match2.group(2)
+            name = name[:paren_match2.start()] + f'({remainder})' + name[paren_match2.end():]
+    
+    # Cleanup: fix dangling dash left by Pattern 3 e.g. "(- Holo)" → "(Holo)"
+    name = re.sub(r'\(\s*-\s*', '(', name)
+    
     return name
 
 
@@ -106,16 +165,29 @@ def filter_sealed_products(products, set_name_to_id):
 def filter_cards_with_history(cards_from_each_set):
     valid_cards = []
     skipped = []
-    
+
     for x in cards_from_each_set:
-        nm_history = x.get("priceHistory", {}).get("conditions", {}).get("Near Mint", {}).get("history")
-        if not nm_history:
-            print(f"  SKIP (no NM history): {x.get('name')}")
-            skipped.append(x.get("name"))
+        history = (
+            x.get("priceHistory", {})
+            .get("conditions", {})
+            .get("Near Mint", {})
+            .get("history")
+        )
+
+        if not history:
+            skipped.append({
+                "reason": "no_nm_history",
+                "card_id": x.get("tcgPlayerId"),
+                "name": x.get("name"),
+                "set_name": x.get("setName"),
+                "market_price": x.get("prices", {}).get("market")
+            })
             continue
+
         valid_cards.append(x)
-    
+
     return valid_cards, skipped
+
 
 def filter_products_with_history(products):
     valid_products = []
@@ -123,10 +195,17 @@ def filter_products_with_history(products):
     
     for x in products:
         history = x.get("priceHistory", [])
+
         if not history:
-            print(f"  SKIP (no price history): {x.get('name')}")
-            skipped.append(x.get("name"))
+            skipped.append({
+                "reason": "no_price_history",
+                "product_id": x.get("tcgPlayerId"),
+                "name": x.get("name"),
+                "set_name": x.get("setName"),
+                "price": x.get("unopenedPrice")
+            })
             continue
+
         valid_products.append(x)
-    
+
     return valid_products, skipped

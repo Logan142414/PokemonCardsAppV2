@@ -4,6 +4,7 @@ from utils.transformations import filter_sealed_products, filter_products_with_h
 import csv
 from datetime import datetime, timezone
 import os
+import json
 api = PokemonTrackerAPI()
 
 set_nums = get_set_ids_to_search()
@@ -28,7 +29,9 @@ for i in set_nums:
         remaining.append(i)
     else:
         print(f"Skipping {i} - already done")
-    
+
+all_skipped = []
+all_skipped_history = []
 
 # Then, run the api call that puts in one "set_num" at a time per api call. Then inserts into db
 
@@ -47,12 +50,33 @@ for set_id, products in api.get_past_price_history_test_sealed(remaining):
     #     f.write(f"{set_id}\n")
 
     valid_products, skipped = filter_sealed_products(products, set_name_to_id)
+    all_skipped.extend(skipped)
+
     valid_products, skipped_history = filter_products_with_history(valid_products)
-    print(f"Inserting history for set {set_id}, {len(valid_products)} products")
+    all_skipped_history.extend(skipped_history)
+
+    print(
+        f"""
+        Set {set_id}
+        Total API products: {len(products)}
+        Skipped basic filters: {len(skipped)}
+        Skipped no history: {len(skipped_history)}
+        Inserted: {len(valid_products)}
+        """
+    )
+
+
     insert_price_history_past_180days_sealed(valid_products)
+
     with open(completed_past_180_day_sets_SEALED_PROD, "a") as f:
         f.write(f"{set_id}\n")
-    
+
+
+    with open("skipped_sealed_basic_filters.json", "w") as f:
+        json.dump(all_skipped, f, indent=2)
+
+    with open("skipped_sealed_history_products.json", "w") as f:
+        json.dump(all_skipped_history, f, indent=2)
 
 
 
