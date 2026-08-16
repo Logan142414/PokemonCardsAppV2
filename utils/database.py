@@ -76,6 +76,7 @@ def get_product_ids_to_search():
 def insert_into_cards_table(cards_from_each_set,set_name_to_id):
     db = get_connection()
     cursor = db.cursor()
+    inserted = 0
 
     for i in cards_from_each_set:
         cursor.execute("""INSERT INTO cards (card_id, set_id, card_name, card_number, image_front_url, rarity)
@@ -89,9 +90,14 @@ def insert_into_cards_table(cards_from_each_set,set_name_to_id):
                         i.get("rarity")
                             
                     ))
+        if cursor.rowcount == 1:
+            inserted += 1
+
     db.commit()
     cursor.close()
     db.close()
+    return inserted 
+    # print(f" {inserted} new cards inserted, {len(cards_from_each_set) - inserted} already existed")
 
 
 #insert data into price history (for first time)
@@ -121,12 +127,13 @@ def insert_into_price_history_table(cards_from_each_set):
 def insert_into_sets_table(sets_to_insert):
     db = get_connection()
     cursor = db.cursor()
+    inserted = 0
 
     for s in sets_to_insert:
         cursor.execute("""
                 INSERT INTO sets (set_id, set_name, release_date, era, card_count, tcg_numeric_id)
                 VALUES (%s, %s, %s, %s, %s, %s)
-                ON CONFLICT (set_id) DO UPDATE SET tcg_numeric_id = EXCLUDED.tcg_numeric_id
+                ON CONFLICT (set_id) DO NOTHING
             """, (
                 s["tcgPlayerId"],
                 s["name"],
@@ -135,11 +142,14 @@ def insert_into_sets_table(sets_to_insert):
                 s.get("cardCount"),
                 s.get("tcgPlayerNumericId")
             ))
+        if cursor.rowcount == 1:
+            inserted += 1
 
     db.commit()
     cursor.close()
     db.close()
-    print(f"Inserted {len(sets_to_insert)} sets")
+    return inserted 
+    # print(f"Sets checked: {len(sets_to_insert)} | New/updated: {inserted}")
 
 
 
@@ -164,7 +174,8 @@ def insert_into_sealed_product_table(products_to_insert, set_name_to_id):
     db.commit()
     cursor.close()
     db.close()
-    print(f"  {inserted} new products inserted, {len(products_to_insert) - inserted} already existed")
+    return inserted 
+    # print(f"  {inserted} new products inserted, {len(products_to_insert) - inserted} already existed")
 
 
 
@@ -263,6 +274,61 @@ def insert_price_history_past_180days_sealed(products_from_each_set):
         print(f"  FK violations ( product not available in product table): {len(fk_violations)}")
         for v in fk_violations:
             print(f"    - {v['name']} ({v['product_id']})")
+
+
+#####################################################################
+
+def save_skipped_cards_to_table():
+    conn = get_connection()
+    cursor = conn.cursor()
+
+    cursor.execute("""CREATE TABLE  zero_products_added_sets( 
+                   date date,
+                   set_id text
+                   )""")
+
+    conn.commit()
+    conn.close()
+    cursor.close()
+
+def save_zero_card_sets_to_table():
+    conn = get_connection()
+    cursor = conn.cursor()
+
+    cursor.execute("""CREATE TABLE  zero_products_added_sets( 
+                   date date,
+                   set_id text
+                   )""")
+
+    conn.commit()
+    conn.close()
+    cursor.close()
+
+def save_zero_product_sets_to_table():
+    conn = get_connection()
+    cursor = conn.cursor()
+
+    cursor.execute("""CREATE TABLE  zero_products_added_sets( 
+                   date date,
+                   set_id text
+                   )""")
+
+    conn.commit()
+    conn.close()
+    cursor.close()
+
+def save_skipped_sealed_to_table():
+    conn = get_connection()
+    cursor = conn.cursor()
+
+    cursor.execute("""CREATE TABLE  zero_products_added_sets( 
+                   date date,
+                   set_id text
+                   )""")
+
+    conn.commit()
+    conn.close()
+    cursor.close()
 
 
 

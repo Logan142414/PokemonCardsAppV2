@@ -5,6 +5,7 @@ from datetime import datetime, timezone
 import csv
 import os
 api = PokemonTrackerAPI()
+print(f"Sealed Product Daily Price Run started: {datetime.now(timezone.utc)}")
 
 
 def save_skipped_sealed_to_csv(skipped, filename="skipped_products.csv"):
@@ -39,6 +40,8 @@ all_skipped = []
 zero_product_sets = []
 total_sets = len(set_nums)
 completed = 0
+total_prod_inserted = 0
+total_valid = 0
 
 for set_id, products in api.api_get_sealed_data(set_nums):
     completed += 1
@@ -47,10 +50,17 @@ for set_id, products in api.api_get_sealed_data(set_nums):
         continue
     valid_products, skipped = filter_sealed_products(products, set_name_to_id)
     all_skipped.extend(skipped)
-    insert_into_sealed_product_table(valid_products, set_name_to_id)
+    sealed_prod_inserted = insert_into_sealed_product_table(valid_products, set_name_to_id)
     insert_into_price_history_table_sealed(valid_products)
-    print(f"[{completed}/{total_sets}] Set {set_id}: {len(products)} inserted, {len(all_skipped)} skipped")
+    total_prod_inserted += sealed_prod_inserted
+    total_valid += len(valid_products)
+    print(f"[{completed}/{total_sets}] Set {set_id}: {sealed_prod_inserted} new, {len(valid_products) - sealed_prod_inserted} already existed, {len(skipped)} filtered out")
 
 save_skipped_sealed_to_csv(all_skipped)
 save_zero_product_sets_to_csv(zero_product_sets)
+
+print(f"\n=== SEALED RUN COMPLETE - {datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M:%S UTC')} ===")
+print(f"Sets processed: {completed}/{total_sets}")
+print(f"Zero product sets: {len(zero_product_sets)}")
+print(f"  {total_prod_inserted} new products inserted, {total_valid - total_prod_inserted} already existed")
 

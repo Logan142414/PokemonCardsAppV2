@@ -88,3 +88,13 @@
     - ~39 of 214 sets completed so far
 - Identified card name cleaning gaps beyond current clean_card_name() logic — will audit with SQL and update
 - Created LESSONS.md to track software engineering and data concepts learned throughout the project
+
+
+### Aug 12-13, 2026
+
+- Finish running the the sealed_product_price_history table - now have completely filled in history tables for approx. last 180 days.
+- Set up GitHub Actions for daily automation — workflow file at .github/workflows/daily_pipeline.yml
+    - Runs daily at midnight UTC (4pm PST) — after API price updates
+    - Three steps in order: sets → cards + price history → sealed products + sealed price history ('api_fill_sets_daily.py', 'api_fill_cards_daily.py' and 'api_fill_sealed_daily.py')
+    - Secrets (DATABASE_URL, Pokemon_K, Pokemon_K_URL) stored in GitHub repo secrets
+    - Logs visible in GitHub Actions tab, email notification on failure
