@@ -1,8 +1,8 @@
 name: Daily Pokemon Pipeline
 
 on:
-  # schedule:
-  #   - cron: '0 0 * * *'  # midnight UTC = 4pm PST
+  schedule:
+    - cron: '0 0 * * *'  # midnight UTC = 4pm PST
   workflow_dispatch:  # allows you to trigger it manually from GitHub
 
 # spins up a fresh Linux machine in the cloud each time
