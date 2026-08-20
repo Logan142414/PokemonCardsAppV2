@@ -7,25 +7,6 @@ import re
 #             return parts[0].strip()
 #     return name
 
-# def clean_card_name(name, card_number):
-#     if not name or not card_number or ' - ' not in name:
-#         return name
-    
-#     base_num = card_number.split('/')[0].lstrip('0') or '0'
-    
-#     parts = name.split(' - ', 1)
-#     after_dash = parts[1].strip()
-#     after_first_token = after_dash.split(' ')[0].split('(')[0].split('[')[0].rstrip(',').strip()
-#     after_first_lstripped = after_first_token.lstrip('0') or '0'
-    
-#     if (after_first_token == card_number or 
-#         after_first_lstripped == base_num or
-#         after_first_token == card_number.split('/')[0]):
-#         remainder = after_dash[len(after_first_token):].strip()
-#         return (parts[0].strip() + ' ' + remainder).strip() if remainder else parts[0].strip()
-    
-#     return name
-
 def clean_card_name(name, card_number):
     if not name or not card_number:
         return name
@@ -209,3 +190,39 @@ def filter_products_with_history(products):
         valid_products.append(x)
 
     return valid_products, skipped
+
+def classify_product_type(name):
+    if not name:
+        return 'Other'
+    n = name.lower()
+    if 'build & battle stadium' in n: return 'Build & Battle Stadium'
+    if 'booster box case' in n: return 'Booster Box Case'
+    if 'elite trainer box case' in n: return 'ETB Case'
+    if 'booster bundle case' in n: return 'Booster Bundle Case'
+    if 'booster box' in n: return 'Booster Box'
+    if 'pokemon center elite trainer box' in n: return 'Pokemon Center Elite Trainer Box'
+    if 'elite trainer box' in n: return 'Elite Trainer Box'
+    if 'booster bundle' in n: return 'Booster Bundle'
+    if 'booster pack' in n: return 'Booster Pack'
+    if 'super premium collection' in n: return 'Super Premium Collection'
+    if 'ultra-premium collection' in n: return 'Ultra Premium Collection'
+    if 'premium collection' in n: return 'Premium Collection'
+    if 'collection box' in n: return 'Collection Box'
+    if '3-pack blister case' in n: return '3 Pack Blister Case'
+    if '3 pack blister case' in n: return '3 Pack Blister Case'
+    if '3 pack blister' in n: return '3 Pack Blister'
+    if '3-pack blister' in n: return '3 Pack Blister'
+    if 'mini tin display case' in n: return 'Mini Tin Display Case'
+    if 'mini tin display' in n: return 'Mini Tin Display'
+    if 'mini tin' in n: return 'Mini Tin'
+    if 'single pack blister' in n: return 'Single Pack Blister'
+    if 'single blister pack' in n: return 'Single Pack Blister'
+    if 'build & battle display' in n: return 'Build & Battle Box Display'
+    if 'build & battle box' in n: return 'Build & Battle Box'
+    if 'league battle deck' in n: return 'League Battle Deck'
+    if 'pin collection' in n: return 'Pin Collection'
+    if 'tech sticker collection case' in n: return 'Tech Sticker Collection Case'
+    if 'tech sticker collection' in n: return 'Tech Sticker Collection'
+    if 'binder collection case' in n: return 'Binder Collection Case'
+    if 'binder collection' in n: return 'Binder Collection'
+    return 'Other'

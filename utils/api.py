@@ -124,8 +124,9 @@ class PokemonTrackerAPI:
             "language": "english",
             "includeHistory": "true",
             "days": 180,
-            "setId": set_num, 
-            "minPrice": 0.90}
+            "setId": set_num,
+            "fetchAllInSet": "true",
+            "minPrice": 0.60}
             
             response = requests.get(f"{self.base_url}/cards", headers=self.headers, params=params )
             print(response.status_code)

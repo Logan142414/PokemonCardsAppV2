@@ -49,17 +49,17 @@ for set_id, products in api.get_past_price_history_test_sealed(remaining):
     # with open(completed_past_180_day_sets, "a") as f:
     #     f.write(f"{set_id}\n")
 
-    valid_products, skipped = filter_sealed_products(products, set_name_to_id)
-    all_skipped.extend(skipped)
+    # valid_products, skipped = filter_sealed_products(products, set_name_to_id)
+    # all_skipped.extend(skipped)
 
-    valid_products, skipped_history = filter_products_with_history(valid_products)
+    valid_products, skipped_history = filter_products_with_history(products)
     all_skipped_history.extend(skipped_history)
 
+    #Skipped basic filters: {len(skipped)}
     print(
         f"""
         Set {set_id}
         Total API products: {len(products)}
-        Skipped basic filters: {len(skipped)}
         Skipped no history: {len(skipped_history)}
         Inserted: {len(valid_products)}
         """

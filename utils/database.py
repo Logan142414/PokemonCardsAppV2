@@ -1,7 +1,7 @@
 import psycopg2 #Python talk to a Postgres database
 from dotenv import load_dotenv
 import os
-from utils.transformations import clean_card_name
+from utils.transformations import clean_card_name, classify_product_type
 from datetime import datetime, timezone
 
 load_dotenv()
@@ -170,14 +170,15 @@ def insert_into_sealed_product_table(products_to_insert, set_name_to_id):
 
     for s in products_to_insert:
         cursor.execute("""
-                INSERT INTO sealed_products (product_id, product_name, set_id, image_url)
-                VALUES (%s, %s, %s, %s)
+                INSERT INTO sealed_products (product_id, product_name, set_id, image_url, product_type)
+                VALUES (%s, %s, %s, %s, %s)
                 ON CONFLICT (product_id) DO NOTHING
             """, (
                 s["tcgPlayerId"],
                 s.get("name"),
                 set_name_to_id.get(s.get("setName")), 
-                s.get("imageCdnUrl400")
+                s.get("imageCdnUrl400"), 
+                classify_product_type(s.get("name"))
             ))
         inserted += cursor.rowcount
 
@@ -203,7 +204,7 @@ def insert_into_price_history_table_sealed(products_to_insert):
                 s.get("tcgPlayerId"),
                 snapshot_date,
                 s.get("unopenedPrice"),
-                s.get("updatedAt")
+                s.get("lastScrapedAt")
                 ))
 
     db.commit()

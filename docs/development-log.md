@@ -98,3 +98,24 @@
     - Three steps in order: sets → cards + price history → sealed products + sealed price history ('api_fill_sets_daily.py', 'api_fill_cards_daily.py' and 'api_fill_sealed_daily.py')
     - Secrets (DATABASE_URL, Pokemon_K, Pokemon_K_URL) stored in GitHub repo secrets
     - Logs visible in GitHub Actions tab, email notification on failure
+
+
+### Aug 15-16, 2026
+- Improved the 180-day historical price backfill pipeline after analyzing missing/incomplete card histories
+    - Improved logging for skipped cards/products to audit filtering issues
+- Completed sealed product historical price backfill
+    - Validated history completeness using SQL queries
+    - Sealed products had significantly better historical coverage than cards, with many products containing the full 180 days of data
+- Improved clean_card_name() logic to handle additional API naming inconsistencies
+    - Added handling for card number suffixes in formats like "Name - 037/xxx" and "Name (037)"
+- Began investigating duplicate card records caused by inconsistent card names and card number formatting
+
+### Aug 17, 2026
+
+- Did more data exploration. Found that hisotry is often not being filled since past price hisotry given by api can be empty or only contain a handful of days even when I'm trying to return past 180. 
+- Added a 'product type' field in my sealed_products table - to make sure I have a clean label of what type of sealed product it is. This will be important for analysis later.
+
+
+### Aug 18-29, 2026
+
+- Now that I have some data and like the format of my tables - I uploaded in Tableau to explore data a little more and start creating some dashboards.

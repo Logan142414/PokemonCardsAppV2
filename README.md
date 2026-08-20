@@ -18,6 +18,23 @@ The goal of this project is to build a warehouse of Pokémon market data that tr
 
 ---
 
+
+## Project Workflow
+
+The project follows a this workflow:
+
+Data Collection (API)
+↓
+Database Storage (Supabase PostgreSQL)
+↓
+Data Exploration & Analysis (SQL + Tableau)
+↓
+Identify Trends & Insights
+↓
+Interactive Dashboard / Web Application (Streamlit)
+
+---
+
 ## Architecture
 
 *(Architecture diagram coming soon)*
