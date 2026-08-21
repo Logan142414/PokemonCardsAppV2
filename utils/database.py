@@ -94,7 +94,7 @@ def insert_into_cards_table(cards_from_each_set,set_name_to_id):
                     ON CONFLICT (card_id) DO NOTHING""",
                         (i.get("tcgPlayerId"),
                         set_name_to_id.get(i.get("setName")),
-                        clean_card_name(i.get("name")),
+                        clean_card_name(i.get("name"), i.get("cardNumber")),
                         i.get("cardNumber"),
                         i.get("imageCdnUrl400"),
                         i.get("rarity")
